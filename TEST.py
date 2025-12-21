@@ -9,7 +9,7 @@ import seaborn as sns
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
 
-
+##
 #Titanic Datensatz einlesen
 df = pd.read_csv("train.csv")
 df.head()
@@ -54,40 +54,20 @@ X = df_model.drop(columns=["Survived"]) #Alle Variablen außer Survived
 
 
 
-#Daten in Trainings- und Testset aufteilen 80/20
-X_train, X_test, y_train, y_test = train_test_split(    #train und validation sets  # 80% training 20% test 
-    X, y,
-    test_size=0.2, #20% der Daten für das Testset
-    random_state=42, 
-    stratify=y   # sorgt dafür, dass die Klassenverteilung in beiden Splits ähnlich ist
-)
-
-#drop nans if any remain
-#X_train = X_train.dropna()
-#X_test = X_test.dropna()
-#y_train = y_train[X_train.index]
-#y_test = y_test[X_test.index]
 
 
 
-#Logistische Regression Modell erstellen und trainieren
-from sklearn.linear_model import LogisticRegression
-log_reg = LogisticRegression(max_iter=1000)
-log_reg.fit(X_train, y_train)
 
-#error rate
-y_pred = log_reg.predict(X_test)        
-print("Accuracy:", accuracy_score(y_test, y_pred))
 
-###
+### Aufgabe 2: EDA Visualisierungen
 
 #EDA (Explorative Data Analysis)
-#Übersicht der Zielvariable Survived
+#Übersicht der Zielvariable Survived um die Verteilung zu sehen
 sns.countplot(x="Survived", data=df)
 plt.title("Verteilung der Zielvariable Survived")
 plt.show()
 
-#Überblick der Geschlechterverteilung
+#Überblick der Geschlechterverteilung um zu sehen wie viele Männer und Frauen überlebt haben bzw. ob es Unterschiede gibt
 sns.countplot(x="Sex", hue="Survived", data=df)
 plt.title("Überleben nach Geschlecht")
 plt.show()
@@ -99,25 +79,27 @@ plt.show()
 #plt.title("Überleben nach Alter")
 #plt.show()
 
-#Passagierklasse und Überleben
+#Passagierklasse und Überleben um zu sehen ob es Unterschiede gibt bei verschiedenen Klassen (wegen Priorität bei Rettungsbooten etc.)
 sns.countplot(x="Pclass", hue="Survived", data=df)
 plt.title("Überleben nach Passagierklasse")
 plt.show()
 
-# Zusätzlich: Pclass getrennt nach Sex (z.B. zwei nebeneinanderliegende Plots)
+# Vorheriger Plot unter Trennung der Geschlechter um Unterschiede weiter aufzuschlüsseln (z.B. zwei nebeneinanderliegende Plots)
 g = sns.catplot(x="Pclass", hue="Survived", col="Sex", data=df, kind="count",
 				height=4, aspect=0.9, palette='Set1')
-g.fig.suptitle("Überleben nach Passagierklasse getrennt nach Sex", y=1.02)
+g.fig.suptitle("Überleben nach Passagierklasse getrennt nach Geschlecht", y=1.02) 
 g.set_axis_labels("Pclass", "Anzahl")
 plt.show()
 
-#Alterverteilung
+#Alterverteilung um zu sehen wie das Alter der Passagiere verteilt ist
+# Mithilde des Histogramms war es einfacher festzulegen wie Missing values im Alter behandelt werden sollten
 sns.histplot(df["Age"], kde=True)
 plt.title("Verteilung des Alters")
 plt.show()
 
 
-### Neues Metting 15.12.2025
+### Neues Meeting 15.12.2025
+### Aufgabe 2 fortgesetzt: EDA Visualisierungen
 
 #Berechne Korrelationen zwischen numerischen Variablen
 correlation_matrix = df_model.corr()
@@ -182,3 +164,196 @@ plt.show()
 # Alter, Fahrpreis, Passagierklasse und Überleben. Es ist erkennbar, dass jüngere Passagiere und 
 # solche mit höheren Fahrpreisen tendenziell eine höhere Überlebensrate aufweisen.
 
+
+
+
+
+
+
+
+##Aufgabe 3a und 3b
+#Daten in Trainings- und Testset aufteilen 80/20 gemäß Vorlesungscoding
+X_train, X_test, y_train, y_test = train_test_split(    #train und validation sets  # 80% training 20% test 
+    X, y,
+    test_size=0.2, #20% der Daten für das Testset
+    random_state=42, 
+    stratify=y   # sorgt dafür, dass die Klassenverteilung in beiden Splits ähnlich ist
+)
+
+#drop nans if any remain
+#X_train = X_train.dropna()
+#X_test = X_test.dropna()
+#y_train = y_train[X_train.index]
+#y_test = y_test[X_test.index]
+
+### Neues Meeting 21.12.2025
+### Aufgabe 4: Auswahl Klassifikationsalgorhithmus
+### Auswahl basiert auf den Daten und Zielen der Analyse
+
+#Herranziehen drei verschiedener Modelle: Logistische Regression, Decision Tree, Random Forest um die beste Performance 
+# zu ermitteln anhand der Accuracy und Cross Validation
+# Logistische Regression Modell erstellen und trainieren
+from sklearn.linear_model import LogisticRegression
+log_reg = LogisticRegression(max_iter=1000)
+log_reg.fit(X_train, y_train)
+
+#error rate
+y_pred = log_reg.predict(X_test)        
+print("Accuracy:", accuracy_score(y_test, y_pred))
+### Decision Tree 
+from sklearn.tree import DecisionTreeClassifier
+
+dt = DecisionTreeClassifier(
+    max_depth=5,          # verhindert Overfitting
+    random_state=42
+)
+
+dt.fit(X_train, y_train)
+
+y_pred_dt = dt.predict(X_test)
+print("Decision Tree Accuracy:", accuracy_score(y_test, y_pred_dt))
+
+### Random Forest
+from sklearn.ensemble import RandomForestClassifier
+
+rf = RandomForestClassifier(
+    n_estimators=100,    # Anzahl der Bäume im Wald
+    max_depth=5,         # verhindert Overfitting
+    random_state=42
+)
+
+rf.fit(X_train, y_train)
+
+y_pred_rf = rf.predict(X_test)
+print("Random Forest Accuracy:", accuracy_score(y_test, y_pred_rf))
+
+### Vergleich der Modelle "Cross-Validation"
+print("\nModellvergleich mittels Cross-Validation:")
+models = {
+    "Logistic Regression": log_reg,
+    "Decision Tree": dt,
+    "Random Forest": rf
+}
+
+for model_name, model in models.items():
+    scores = cross_val_score(model, X, y, cv=10)  
+
+#Zur Modellbewertung wurde eine k‑fold Cross‑Validation mit unterschiedlichen
+#Werten für k (5, 10, 20, 100) durchgeführt.
+#Dabei zeigte sich, dass sich der Mittelwert der Accuracy ab k = 10 stabilisiert
+#und höhere Werte für k keinen signifikanten Erkenntnisgewinn mehr liefern,
+#sondern lediglich die Rechenzeit erhöhen.
+#Daher wurde für die weitere Analyse eine 10‑fold Cross‑Validation verwendet.
+
+#| Accuracy                 | Durchschnittliche Accuracy                  |
+#| ------------------------ | ------------------------------------------- |
+#| Ein einzelner Wert       | Mittelwert aus mehreren Läufen              |
+#| Abhängig von einem Split | Robuster & fairer                           |
+#| Kann Zufall sein         | Bessere Schätzung der echten Modellleistung |
+#| Gut für schnellen Check  | Standard für Modellvergleich                |
+
+# Entscheidung für Random Forest basierend auf der höchsten Accuracy
+# Performace ist höher und stabiler als bei der Logistischen Regression 
+#Robuster gegenüber Overfitting als Decision Tree
+
+    print(f"{model_name}: {scores.mean():.4f} ± {scores.std():.4f}")
+
+#Aufgabe 5 Training von Random Forest auf dem gesamten Trainingsset
+rf_final = RandomForestClassifier(
+    n_estimators=50,
+    max_depth=5,
+    random_state=42,
+    min_samples_split=5 
+)
+rf_final.fit(X, y)
+
+y_final_pred = rf_final.predict(X_test)
+print("\nFinal Random Forest Accuracy on Test Set:", accuracy_score(y_test, y_final_pred))  
+
+# Aufgabe 6 Modellbewertung
+print("\nConfusion Matrix:")
+print(confusion_matrix(y_test, y_final_pred))
+
+#Interpretation der Confusion Matrix:
+#Das Modell berechnet für jede Person eine Überlebenswahrscheinlichkeit.
+#Nur wenn diese hoch genug ist (Standard-Schwelle ~0.5), sagt das Modell "überlebt".
+#Bei Unsicherheit entscheidet es sich eher für "nicht überlebt". 0.5 und darunter ist "nicht überlebt", darüber "überlebt".
+#Dadurch erkennt das Modell Todesfälle zuverlässiger als Überlebende
+#(wenige False Positives, aber mehr False Negatives).
+
+#Aufgabe 6b Cross-Validation mit dem finalen Modell
+print("\nFinal Model Cross-Validation Accuracy:")
+final_scores = cross_val_score(rf_final, X, y, cv=10)
+print(f"Random Forest: {final_scores.mean():.44f} ± {final_scores.std():.4f}") 
+
+#Aufgabe 6c Fehleranalyse
+
+#Confusion Matrix visualisieren um die Fehler besser zu verstehen
+cm = confusion_matrix(y_test, y_final_pred)
+
+sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=['Nicht Überlebt', 'Überlebt'], yticklabels=['Nicht Überlebt', 'Überlebt'])
+plt.xlabel('Vorhergesagte Klasse')
+plt.ylabel('Wahre Klasse')
+plt.title('Confusion Matrix des Random Forest Modells')
+plt.show()
+
+#Feature Importance
+#Visualisierung der wichtigsten Merkmale um zu verstehen, welche Variablen am meisten zur Vorhersage beitragen
+#Variablen decken sich mit den Erkenntnissen aus der EDA
+importances = rf_final.feature_importances_ #Funktion zur Berechnung der Feature Importance
+feature_names = X.columns
+indices = np.argsort(importances)[::-1]
+
+plt.figure(figsize=(10, 6)) 
+plt.title("Feature Importance")
+plt.bar(range(X.shape[1]), importances[indices], align='center')
+plt.xticks(range(X.shape[1]), feature_names[indices], rotation=90)
+plt.xlabel("Feature")
+plt.ylabel("Importance")
+plt.show()
+
+#Feinabstimmung des Modells durch Hyperparameter-Optimierung
+from sklearn.model_selection import GridSearchCV
+
+param_grid = {
+    'n_estimators': [50, 100, 200],
+    'max_depth': [None, 5, 10, 20],
+    'min_samples_split': [2, 5, 10]         
+}
+
+grid_search = GridSearchCV(
+    estimator=RandomForestClassifier(random_state=42),
+    param_grid=param_grid,
+    cv=5,
+    scoring='accuracy',
+    n_jobs=-1
+)
+
+grid_search.fit(X_train, y_train)
+
+best_params = grid_search.best_params_
+print("\nBeste Hyperparameter:", best_params) # Beste Hyperparameter ausgeben
+# Punkte des Finetunings wie Feature Engineering, Bereinigungen der Kategoriencrossvalidation mit versch. k und 
+# modellvergleich wurden bereits in vorherigen Schritten gemacht
+# Hyperparameter waren hiermit zuletzt ermittelt worden um die Modellperformance weiter zu verbessern 
+# min_samples_split': 5 ist gleich akkurat wie 10 aber weniger komplex und schneller
+
+#Aufgabe 9
+#1) Vorhersagen + Wahrscheinlichkeiten
+y_pred = rf_final.predict(X_test)
+y_proba = rf_final.predict_proba(X_test)[:, 1]  # Wahrscheinlichkeit für Survived=1
+
+# 2) PowerBI-Export-DF bauen
+powerbi_df = X_test.copy()
+powerbi_df["Survived_True"] = y_test.values
+powerbi_df["Survived_Pred"] = y_pred
+powerbi_df["Survival_Probability"] = y_proba
+
+#3)  Fehlertyp als Text
+powerbi_df["Result"] = "TN"
+powerbi_df.loc[(powerbi_df["Survived_True"]==0) & (powerbi_df["Survived_Pred"]==1), "Result"] = "FP"
+powerbi_df.loc[(powerbi_df["Survived_True"]==1) & (powerbi_df["Survived_Pred"]==0), "Result"] = "FN"
+powerbi_df.loc[(powerbi_df["Survived_True"]==1) & (powerbi_df["Survived_Pred"]==1), "Result"] = "TP"
+
+#4) Export als CSV
+powerbi_df.to_csv("titanic_powerbi_output.csv", index=False)
